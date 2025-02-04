@@ -1,37 +1,96 @@
-import Link from "next/link";
+"use client";
 
-export default function HomePage() {
+import { useState } from "react";
+import { mockData, type FileItem } from "../lib/mockData";
+import { Breadcrumb } from "../components/Breadcrumb";
+import { Button } from "~/components/ui/button";
+import { Upload, FolderIcon, FileIcon } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
+
+export default function Home() {
+  const [currentPath, setCurrentPath] = useState<FileItem[]>([
+    { id: "root", name: "My Drive", type: "folder" },
+  ]);
+
+  const handleItemClick = (item: FileItem) => {
+    if (item.type === "folder") {
+      setCurrentPath([...currentPath, item]);
+    }
+  };
+
+  const getCurrentFolderContents = (): FileItem[] => {
+    let contents = mockData;
+    for (let i = 1; i < currentPath.length; i++) {
+      const folder = contents.find((item) => item.id === currentPath[i]?.id);
+      if (folder?.children) {
+        contents = folder.children;
+      } else {
+        break;
+      }
+    }
+    return contents;
+  };
+
+  const handleUpload = () => {
+    // Placeholder for upload functionality
+    console.log("Upload button clicked");
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-        <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-          Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-        </h1>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/usage/first-steps"
-            target="_blank"
+    <div className="min-h-screen bg-gray-900 text-gray-100">
+      <div className="container mx-auto p-4">
+        <h1 className="mb-4 text-2xl font-bold">Borsch Drive</h1>
+        <div className="mb-4 flex items-center justify-between">
+          <Breadcrumb path={currentPath} onNavigate={setCurrentPath} />
+          <Button
+            onClick={handleUpload}
+            className="bg-blue-600 hover:bg-blue-700"
           >
-            <h3 className="text-2xl font-bold">First Steps →</h3>
-            <div className="text-lg">
-              Just the basics - Everything you need to know to set up your
-              database and authentication.
-            </div>
-          </Link>
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/introduction"
-            target="_blank"
-          >
-            <h3 className="text-2xl font-bold">Documentation →</h3>
-            <div className="text-lg">
-              Learn more about Create T3 App, the libraries it uses, and how to
-              deploy it.
-            </div>
-          </Link>
+            <Upload className="mr-2 h-4 w-4" />
+            Upload
+          </Button>
         </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[50%]">Name</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Size</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {getCurrentFolderContents().map((item) => (
+              <TableRow
+                key={item.id}
+                className="cursor-pointer hover:bg-gray-800"
+                onClick={() => handleItemClick(item)}
+              >
+                <TableCell className="font-medium">
+                  <div className="flex items-center">
+                    {item.type === "folder" ? (
+                      <FolderIcon className="mr-2 h-5 w-5 text-yellow-400" />
+                    ) : (
+                      <FileIcon className="mr-2 h-5 w-5 text-blue-400" />
+                    )}
+                    {item.name}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                </TableCell>
+                <TableCell>{item.size ?? "-"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
-    </main>
+    </div>
   );
 }
